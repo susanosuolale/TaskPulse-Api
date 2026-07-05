@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="TaskPulse.Application/TaskPulse.Application.csproj" />
+  <Project Path="TaskPulse.Domain/TaskPulse.Domain.csproj" />
+  <Project Path="TaskPulse.Infrastructure/TaskPulse.Infrastructure.csproj" />
+  <Project Path="TaskPulseApi/TaskPulseApi.csproj" />
+  <Project Path="TaskPulse.Notification/TaskPulse.Notification.csproj" />
+  <Project Path="TaskPulse.Functions/TaskPulse.Functions.csproj" />
+</Solution>

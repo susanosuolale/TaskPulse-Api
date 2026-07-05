@@ -1,0 +1,23 @@
+# builds and compiles your app amd checks for errors before you save your
+# work to the internet
+name: Build TaskPulse
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download Code
+      uses: actions/checkout@v4
+
+    - name: Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Build the App
+      run: dotnet build TaskPulse.slnx
