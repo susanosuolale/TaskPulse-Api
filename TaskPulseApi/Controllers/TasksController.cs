@@ -42,7 +42,7 @@ public class TasksController : Controller
             return NotFound();
         }
 
-        return Json(dto); // Keeping as JSON for now
+        return View("Details", dto); // Return the beautiful Details web page!
     }
 
     // --- STEP 1: Show the empty Create form ---

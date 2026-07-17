@@ -23,6 +23,9 @@ builder.Services.AddControllersWithViews();
 //        modelBuilder.GetEdmModel()));
 
 // Configure Entity Framework Core with SQL Server
+// the address of the database. This address is called a "Connection String".
+// this address is stored in appsettings.json
+// ---
 // Dual Database Support:
 // 1. Local Development uses your Windows SQL Server LocalDB.
 // 2. Production (Render.com) uses a free In-Memory database!
@@ -33,6 +36,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
     }
     else
+    // saves data to RAM of any computer using the app
     {
         options.UseInMemoryDatabase("TaskPulseOnlineDb");
     }

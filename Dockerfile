@@ -2,13 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy the solution file and restore dependencies
-COPY *.sln .
+# Copy the solution file (if any) and restore dependencies
+COPY *.slnx ./
 COPY TaskPulse.Domain/*.csproj ./TaskPulse.Domain/
 COPY TaskPulse.Application/*.csproj ./TaskPulse.Application/
 COPY TaskPulse.Infrastructure/*.csproj ./TaskPulse.Infrastructure/
 COPY TaskPulseApi/*.csproj ./TaskPulseApi/
-RUN dotnet restore
+RUN dotnet restore TaskPulseApi/TaskPulseApi.csproj
 
 # Copy the rest of the code and build
 COPY . .
