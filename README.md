@@ -1,34 +1,29 @@
-# TaskPulse Azure Microservices
+# TaskPulse Web Application
 
-A professional, enterprise-grade task management system built with .NET 8, Clean Architecture, and Microsoft Azure Cloud services.
+A beautiful, responsive task management system built with **.NET 8 MVC (Model-View-Controller)**. 
 
-## 🚀 Features & Technologies Demonstrated
+## 🚀 Features
+- **Full Web UI**: Dark-mode frontend built with HTML, CSS, and Razor Pages.
+- **In-Memory Caching**: Uses Local Memory Caching to drastically speed up data retrieval.
+- **Dual Database Support**: Uses SQL Server (LocalDB) for local development, and automatically falls back to an In-Memory Database for free cloud deployment.
+- **Clean Architecture**: Separates code into Domain, Application, Infrastructure, and API layers.
 
-- **Clean Architecture**: The code is strictly separated into Domain, Application, Infrastructure, and API layers to ensure it is highly maintainable.
-- **Azure SQL Database**: Uses Entity Framework Core to store task data permanently in an Azure SQL Database.
-- **Redis Caching**: Uses `IDistributedCache` to temporarily store API responses, drastically speeding up the "Get All Tasks" web requests.
-- **OData Integration**: Allows users to filter and sort data directly from the API web address using the official `Microsoft.AspNetCore.OData` package.
-- **Azure Functions (Queue Storage)**: Uses a `QueueTrigger` to automatically run background code the exact second a new note is dropped into an Azure Storage bucket.
-- **Notification Microservice**: A completely independent microservice designed to receive data from the Azure Function and process email notifications.
-- **CI/CD Pipeline**: Automated build workflows configured using GitHub Actions (`build.yml`) to ensure code quality on every upload.
-
-## 🛠️ Getting Started Locally
+## 🛠️ How to Run Locally
 
 ### Prerequisites
-- .NET 8 SDK
-- LocalDB (built into Windows) for simulating the Azure SQL database.
-- Azure Storage Emulator (Azurite) for simulating the cloud buckets.
-- Redis Server running on `localhost:6379`.
+- .NET 8 SDK installed on your computer.
 
-### How to Run
-1. Run `dotnet ef database update --project TaskPulse.Infrastructure --startup-project TaskPulseApi` to build the database tables.
-2. Run `dotnet run` inside the `TaskPulseApi` folder to start the main API.
-3. Run `func start` inside the `TaskPulse.Functions` folder to start the background worker.
-4. Run `dotnet run` inside the `TaskPulse.Notification` folder to start the microservice.
+### Quick Start
+1. Open your terminal and navigate to the `TaskPulseApi` folder.
+2. Run the command: `dotnet run`
+3. Look at the terminal output to find the local URL (usually `http://localhost:5172`).
+4. Open your web browser and go to `http://localhost:5172/Tasks` to see the beautiful web interface!
 
-## 🔄 Architecture Flow
-When a user creates a new task:
-1. The Task is securely saved to the Azure SQL Database.
-2. The Redis cache is automatically cleared to guarantee the frontend receives fresh data next time.
-3. A text note is dropped into an Azure Storage Queue bucket.
-4. The Azure Function instantly detects the note, converts it to JSON text, and fires it over the network to the Notification Microservice.
+## 🌍 How to Deploy Online (Render.com)
+This application is fully configured to be deployed to **Render.com** for free!
+1. Create a free account on [Render.com](https://render.com).
+2. Click **New +** and select **Web Service**.
+3. Connect your GitHub account and select this repository.
+4. Render will automatically detect the `Dockerfile` and build the application.
+5. In the settings, make sure the Environment is set to `Production` (this tells the app to use the free In-Memory database so it doesn't crash looking for SQL Server).
+6. Click **Deploy** and your website will be live on the internet!

@@ -1,0 +1,143 @@
+@model IEnumerable<TaskPulse.Application.DTOs.TaskResponseDto>
+<!-- be ready to recieve a list of tasks from the controller -->
+<!-- this file builds your UI -->
+
+<!-- storage used to share data between files -->
+@{
+    ViewData["Title"] = "My Tasks";
+}
+
+<style>
+    /* Styling for our beautiful task cards */
+    .task-card {
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        border-left: 5px solid #bb86fc; /* Purple accent line */
+    }
+    .task-title {
+        font-size: 22px;
+        margin-top: 0;
+        margin-bottom: 5px;
+        color: #ffffff;
+    }
+    .task-desc {
+        color: #b3b3b3;
+    }
+    .status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    .completed {
+        background-color: #03dac6; /* Mint green for done */
+        color: #000000;
+    }
+    .pending {
+        background-color: #cf6679; /* Red for not done */
+        color: #ffffff;
+    }
+    .btn {
+        background-color: #bb86fc;
+        color: #000000;
+        text-decoration: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 10px;
+    }
+    .btn:hover {
+        background-color: #9965f4;
+    }
+    .btn-create {
+        background-color: #03dac6;
+        color: #000000;
+        text-decoration: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+    .btn-create:hover {
+        background-color: #01b8a5;
+    }
+    .btn-edit {
+        background-color: #ffb74d; /* Orange for edit */
+        color: #000000;
+        text-decoration: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 10px;
+        margin-left: 10px;
+    }
+    .btn-delete {
+        background-color: #cf6679; /* Red for delete */
+        color: #ffffff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 10px;
+    }
+</style>
+
+<h2>Your Task List</h2>
+
+<!-- This button links directly to our new Create page! -->
+<a href="/Tasks/Create" class="btn-create">+ Create New Task</a>
+
+<!-- We check if the Model (our data) is empty -->
+<!-- So the word Model simply means: "The exact data that the Controller sent to me." -->
+@if (Model == null || !Model.Any())
+{
+    <p>You have no tasks yet. Enjoy your day!</p>
+}
+else
+{
+    <!-- Loop through every task and create a card for it -->
+    @foreach (var task in Model)
+    {
+        <div class="task-card">
+            
+            @if (task.IsCompleted)
+            {
+                <span class="status completed">Completed</span>
+            }
+            else
+            {
+                <span class="status pending">Pending</span>
+            }
+            
+            <h3 class="task-title">@task.Title</h3>
+            <p class="task-desc">@task.Description</p>
+            
+            <div class="action-buttons">
+                <!-- View button -->
+                <a href="/Tasks/GetById/@task.Id" class="btn">View Details</a>
+                
+                <!-- Edit button -->
+                <a href="/Tasks/Update/@task.Id" class="btn-edit">Edit</a>
+                
+                <!-- Delete button MUST be a tiny form because the Controller expects a POST request -->
+                <form action="/Tasks/Delete/@task.Id" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-delete">Delete</button>
+                </form>
+            </div>
+        </div>
+    }
+}

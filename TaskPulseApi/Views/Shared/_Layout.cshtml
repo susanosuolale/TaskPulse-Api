@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- all the pages of the website share these features(below) so instead 
+    of writing these same features again and again for all the webpages
+    we create a single template for all the pages-->
+    <!-- Whenever a user visits any page on your website, 
+    your application loads this _Layout.cshtml file first, and 
+    it puts the specific page the user asked for into the RenderBody() -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TaskPulse</title>
+    
+    <!-- We are importing a beautiful, modern font from Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* This is our beautiful, clean dark mode design! */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* The top menu bar */
+        header {
+            background-color: #1e1e1e;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #bb86fc; /* A nice purple color */
+        }
+        
+        /* The main area where your pages will appear */
+        main {
+            flex: 1;
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* The bottom area */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #1e1e1e;
+            font-size: 14px;
+            color: #888888;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>TaskPulse</h1>
+    </header>
+    
+    <main>
+        <!-- This is a special word. It means "Put the specific web page content here!" -->
+        @RenderBody()
+    </main>
+
+    <footer>
+        &copy; 2026 - TaskPulse Web MVC
+    </footer>
+</body>
+</html>

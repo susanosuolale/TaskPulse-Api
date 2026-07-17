@@ -1,177 +1,113 @@
-using System.Text.Json;
-using Azure.Storage.Queues;
-using Microsoft.AspNetCore.OData.Query;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 using TaskPulse.Application.DTOs;
 using TaskPulse.Application.Interfaces;
-using TaskPulse.Domain.Entities;
+
+// Because simple HTML literally cannot send a PUT or a 
+// DELETE signal, MVC applications are forced to use POST
+//  for almost everything that changes data
 
 namespace TaskPulseApi.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class TasksController : ControllerBase
+// 1. Removed [ApiController] and [Route]
+// 2. Changed from ControllerBase to Controller
+public class TasksController : Controller
 {
-    private readonly ITaskRepository _taskRepository;
-    //Fast memory for data storage
-    private readonly IDistributedCache _cache;
-    private const string CacheKey = "GetAllTasks";
+    private readonly ITaskService _taskService;
 
-    public TasksController(ITaskRepository taskRepository, IDistributedCache cache)
+    public TasksController(ITaskService taskService)
     {
-        _taskRepository = taskRepository;
-        _cache = cache;
+        _taskService = taskService;
+    }
+
+    // 3. Changed name from GetAll to Index (standard for web pages)
+    [HttpGet]
+    public async Task<IActionResult> Index()
+    {
+        var dtos = await _taskService.GetAllAsync();
+        
+        // 4. Return View instead of Ok
+        // This tells your application to find a web page and 
+        // send your tasks to it.
+        // Because your controller is named Tasks and the method is named Index, 
+        // the application is smart. It automatically knows to go look for a file at Views/Tasks/Index.cshtml
+        return View(dtos);
     }
 
     [HttpGet]
-    // lets a user pass specific instructions to filter or sort data
-    [EnableQuery]
-    public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetAll()
+    public async Task<IActionResult> GetById(System.Guid id)
     {
-        // This line connects to the Redis server and asks a direct question: \
-        // "Do you have any data saved under the name "GetAllTasks"?"
-        var cachedTasks = await _cache.GetStringAsync(CacheKey);
-        // If the answer is yes, and the data is not empty, it retrieves and returns the data to the frontend immediately.
-        if (!string.IsNullOrEmpty(cachedTasks))
+        var dto = await _taskService.GetByIdAsync(id);
+        if (dto == null)
         {
-            // takes the raw json text and converts into a c# object(a list of <Taskitem>)
-            var deserialized = JsonSerializer.Deserialize<IEnumerable<TaskResponseDto>>(cachedTasks);
-            if (deserialized != null)
-            {
-                // returns the list of <Taskitem>
-                return Ok(deserialized);
-            }
+            return NotFound();
         }
 
-        var tasks = await _taskRepository.GetAllAsync();
-        var dtos = tasks.Select(t => new TaskResponseDto
-        {
-            Id = t.Id,
-            Title = t.Title,
-            Description = t.Description,
-            IsCompleted = t.IsCompleted,
-            CreatedAt = t.CreatedAt
-        });
-        //  converts the list of <TaskResponseDto> into a json string
-        var serialized = JsonSerializer.Serialize(dtos);
-        var cacheOptions = new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
-        };
-        // _cache.SetStringAsync saves the JSON text in Redis using the name 
-        // "GetAllTasks" and applies the 5-minute time limit
-        await _cache.SetStringAsync(CacheKey, serialized, cacheOptions);
-
-        return Ok(dtos);
+        return Json(dto); // Keeping as JSON for now
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<TaskResponseDto>> GetById(Guid id)
+    // --- STEP 1: Show the empty Create form ---
+    [HttpGet]
+    public IActionResult Create()
     {
-        var task = await _taskRepository.GetByIdAsync(id);
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(CreateTaskDto dto)
+    {
+        var responseDto = await _taskService.CreateAsync(dto);
+        return RedirectToAction(nameof(Index)); // Go back to the list after creating
+    }
+
+    // --- STEP 1: Show the Update form with the old data ---
+    [HttpGet]
+    public async Task<IActionResult> Update(System.Guid id)
+    {
+        var task = await _taskService.GetByIdAsync(id);
         if (task == null)
         {
             return NotFound();
         }
 
-        var dto = new TaskResponseDto
+        var updateDto = new UpdateTaskDto
         {
-            Id = task.Id,
             Title = task.Title,
             Description = task.Description,
-            IsCompleted = task.IsCompleted,
-            CreatedAt = task.CreatedAt
+            IsCompleted = task.IsCompleted
         };
 
-        return Ok(dto);
+        return View(updateDto);
     }
 
+    // --- STEP 2: Save the updated data using POST ---
     [HttpPost]
-    public async Task<ActionResult> Create(CreateTaskDto dto)
+    public async Task<IActionResult> Update(System.Guid id, UpdateTaskDto dto)
     {
-        var task = new TaskItem
-        {
-            Id = Guid.NewGuid(),
-            Title = dto.Title,
-            Description = dto.Description,
-            IsCompleted = false,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        await _taskRepository.AddAsync(task);
-        // after any changes is made, RemoveAsync command connects to Redis 
-        // and immediately deletes the text stored under the name "GetAllTasks"
-        await _cache.RemoveAsync(CacheKey);
-
-        // --- NEW CODE: Drop the note into the cloud bucket ---
         try
         {
-            // the queueClient is the literal C# object that establishes the network 
-            // connection to Azure Storage with destination being new-tasks-queue 
-            // and delivers the message
-            var queueClient = new QueueClient("UseDevelopmentStorage=true", "new-tasks-queue");
-            
-            // 2. Make sure the bucket actually exists
-            await queueClient.CreateIfNotExistsAsync();
-            
-            // 3. Create the text note
-            var noteText = $"A new task called '{task.Title}' was created!";
-            
-            // 4. Drop the note into the bucket
-            await queueClient.SendMessageAsync(noteText);
+            await _taskService.UpdateAsync(id, dto);
+            return RedirectToAction(nameof(Index));
         }
-        catch (Exception ex)
-        {
-            // If the local Storage Simulator is turned off, catch the error and do nothing
-            // so the app does not crash for the user.
-            Console.WriteLine($"Could not drop note into bucket. Error: {ex.Message}");
-        }
-        // -----------------------------------------------------
-
-        var responseDto = new TaskResponseDto
-        {
-            Id = task.Id,
-            Title = task.Title,
-            Description = task.Description,
-            IsCompleted = task.IsCompleted,
-            CreatedAt = task.CreatedAt
-        };
-
-        return CreatedAtAction(nameof(GetById), new { id = task.Id }, responseDto);
-    }
-
-    [HttpPut("{id}")]
-    public async Task<ActionResult> Update(Guid id, UpdateTaskDto dto)
-    {
-        var existingTask = await _taskRepository.GetByIdAsync(id);
-        if (existingTask == null)
+        catch (System.Exception)
         {
             return NotFound();
         }
-
-        existingTask.Title = dto.Title;
-        existingTask.Description = dto.Description;
-        existingTask.IsCompleted = dto.IsCompleted;
-
-        await _taskRepository.UpdateAsync(existingTask);
-        await _cache.RemoveAsync(CacheKey);
-
-        return NoContent();
     }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(Guid id)
+    // --- Receive the delete command from the tiny form ---
+    [HttpPost]
+    public async Task<IActionResult> Delete(System.Guid id)
     {
-        var existingTask = await _taskRepository.GetByIdAsync(id);
-        if (existingTask == null)
+        try
         {
-            return NotFound();
+            await _taskService.DeleteAsync(id);
+            return RedirectToAction(nameof(Index));
         }
-
-        await _taskRepository.DeleteAsync(id);
-        await _cache.RemoveAsync(CacheKey);
-
-        return NoContent();
+        catch (System.Exception ex)
+        {
+            // If it fails, log it and go back to index anyway so the user doesn't get stuck
+            Console.WriteLine("Delete failed: " + ex.Message);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

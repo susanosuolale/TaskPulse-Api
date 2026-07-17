@@ -3,36 +3,44 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.ModelBuilder;
 using TaskPulse.Application.DTOs;
 using TaskPulse.Application.Interfaces;
+using TaskPulse.Application.Services;
 using TaskPulse.Infrastructure.Data;
 using TaskPulse.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Redis Caching
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = "localhost:6379";
-    // prefix for your cached data
-    options.InstanceName = "TaskPulse_";
-});
+// Use local memory cache instead of Redis so the app doesn't crash when Redis is turned off!
+builder.Services.AddDistributedMemoryCache();
 
 // Add services to the container.
-var modelBuilder = new ODataConventionModelBuilder();
-modelBuilder.EntitySet<TaskResponseDto>("Tasks");
+// var modelBuilder = new ODataConventionModelBuilder();
+// modelBuilder.EntitySet<TaskResponseDto>("Tasks");
 
-builder.Services.AddControllers().AddOData(
-    options => options.Select().Filter().OrderBy().Expand().Count().SetMaxTop(100).AddRouteComponents(
-        "odata",
-        modelBuilder.GetEdmModel()));
+builder.Services.AddControllersWithViews();
+// .AddOData(
+//    options => options.Select().Filter().OrderBy().Expand().Count().SetMaxTop(100).AddRouteComponents(
+//        "odata",
+//        modelBuilder.GetEdmModel()));
 
 // Configure Entity Framework Core with SQL Server
-// Every app needs a specific address to find its database. This address is called a "Connection String".
-// this address is stored in appsettings.json
+// Dual Database Support:
+// 1. Local Development uses your Windows SQL Server LocalDB.
+// 2. Production (Render.com) uses a free In-Memory database!
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
+    else
+    {
+        options.UseInMemoryDatabase("TaskPulseOnlineDb");
+    }
+});
 
 // Dependency Injection
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -51,6 +59,9 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllerRoute(
+    name: "default",
+    // says the dafault controller is tasks and default action is index
+    pattern: "{controller=Tasks}/{action=Index}/{id?}");
 
 app.Run();

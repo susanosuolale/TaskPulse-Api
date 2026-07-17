@@ -1,0 +1,54 @@
+@model TaskPulse.Application.DTOs.CreateTaskDto
+
+@{
+    ViewData["Title"] = "Create New Task";
+}
+
+<style>
+    /* Styling for our beautiful form */
+    .form-container {
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .input-box {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: none;
+        box-sizing: border-box;
+    }
+    .btn-submit {
+        background-color: #03dac6;
+        color: #000000;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
+<h2>Create a New Task</h2>
+
+<div class="form-container">
+    <!-- We added an onsubmit rule! When the form sends, it instantly disables the button so you can't click it twice! -->
+    <form action="/Tasks/Create" method="post" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerText = 'Saving...';">
+        <!-- the names here must match the name of the properties in the DTO -->
+        <label>Task Title</label>
+        <!-- The name="Title" perfectly matches the Title property in your DTO! -->
+        <input type="text" name="Title" class="input-box" required />
+
+        <label>Task Description</label>
+        <!-- The name="Description" perfectly matches the Description property in your DTO! -->
+        <input type="text" name="Description" class="input-box" />
+
+        <!--When the user clicks the "Save Task" button, the form bundles up the Title and Description
+         and shoots it back to your Controller  -->
+        <button type="submit" class="btn-submit">Save Task</button>
+        
+    </form>
+</div>

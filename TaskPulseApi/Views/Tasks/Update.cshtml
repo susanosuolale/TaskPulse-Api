@@ -1,0 +1,64 @@
+@model TaskPulse.Application.DTOs.UpdateTaskDto
+
+@{
+    ViewData["Title"] = "Update Task";
+}
+
+<style>
+    /* Styling for our beautiful form */
+    .form-container {
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .input-box {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        border: none;
+        box-sizing: border-box;
+    }
+    .btn-submit {
+        background-color: #ffb74d; /* Orange for update */
+        color: #000000;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .checkbox-container {
+        margin-bottom: 20px;
+    }
+</style>
+
+<h2>Update Your Task</h2>
+
+<div class="form-container">
+    <!-- If we don't write 'action="..."', it automatically sends the data back to the exact URL we are currently on! -->
+    <!-- We also added an onsubmit rule to disable the button after clicking! -->
+    <form method="post" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerText = 'Saving...';">
+        
+        <label>Task Title</label>
+        <!-- Notice we use value="@Model.Title" to fill the box with the old data! -->
+        <input type="text" name="Title" class="input-box" value="@Model.Title" required />
+
+        <label>Task Description</label>
+        <!-- Notice we use value="@Model.Description" to fill the box with the old data! -->
+        <input type="text" name="Description" class="input-box" value="@Model.Description" />
+
+        <div class="checkbox-container">
+            <label>Is it Completed?</label>
+            <!-- This checks the box if it was previously completed -->
+            <!-- if value = true, this translates to IF the user decides to put a checkmark in this box,
+             the value you should send to the Controller is true -->
+            <input type="checkbox" name="IsCompleted" value="true" @(Model.IsCompleted ? "checked" : "") />
+        </div>
+
+        <button type="submit" class="btn-submit">Save Changes</button>
+        
+    </form>
+</div>
