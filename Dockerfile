@@ -1,3 +1,4 @@
+# instructions on how to build and run the app anywhere(internet or other developers)
 # Use the official .NET SDK image to build the app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
@@ -10,12 +11,14 @@ COPY TaskPulse.Infrastructure/*.csproj ./TaskPulse.Infrastructure/
 COPY TaskPulseApi/*.csproj ./TaskPulseApi/
 RUN dotnet restore TaskPulseApi/TaskPulseApi.csproj
 
-# Copy the rest of the code and build
+# Copy the rest of the code and build(copy all of the code and compile 
+# using mini .NET computer (.NET SDK image))
 COPY . .
 WORKDIR /app/TaskPulseApi
 RUN dotnet publish -c Release -o out
 
-# Use the official runtime image for the final build
+# Use the official runtime image for the final build(run the image on a 
+# smaller .NET computer (.NET runtime image))
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/TaskPulseApi/out ./
